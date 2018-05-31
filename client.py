@@ -4,7 +4,7 @@ import sys
 import time
 
 host = socket.gethostname() # Get local machine name
-
+#testing testin testin 
 port = 8083                # Reserve a port for your service.
 nicks= []
 class Client:
