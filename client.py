@@ -5,7 +5,7 @@ import time
 
 host = socket.gethostname() # Get local machine name
 
-port = 8083                # Reserve a port for your service.
+port = 8084                # Reserve a port for your service.
 nicks= []
 class Client:
 
@@ -24,11 +24,11 @@ class Client:
 			data=self.soc.recv(1024).decode('utf-8')
 			if not data:
 				break
-			print(time.strftime("%H:%M:%S")," ",data)
+			print("["+time.strftime("%H:%M:%S")+"]"," ",data)
 
 	def sendMsg(self):
 		alias=input("Nickname: ")
-		message='#NICK '+alias
+		message='#NICK '+alias	
 		while True:
 			self.soc.send(message.encode('utf-8'))
 			message=input('')
