@@ -141,9 +141,14 @@ class Server:
 				self.connections.remove(con)
 				data = "server : "+self.checkNick(adr[1]) +" disconnected"
 				print(data)
+
+				#search in all channels 
+					#if in channel remove the user and emmit the message to other members
+
+				#emmit the message
 				for connection in self.connections:
 					connection.send(data.encode('utf-8'))
-				self.users[:] = [user for user in self.users if user[0] != adr[1]]
+				#self.users[:] = [user for user in self.users if user[0] != adr[1]]
 
 				con.close()
 				break
