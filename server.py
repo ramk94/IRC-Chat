@@ -1,6 +1,7 @@
 import socket
 import threading
 import time
+import sys
 
 PORT = 8084
 HOST = socket.gethostname()
@@ -20,6 +21,7 @@ class Server:
 		#Binds the server to the particular port
 		self.server.bind((HOST,PORT))
 		self.server.listen(5)
+		
 
 	def connection(self,con,adr):
 		#self.ports.append(adr)
@@ -99,7 +101,12 @@ class Server:
 						for possible_channel in message[1:]:
 							if possible_channel in self.channel_list:
 								for nick in self.channel_list[possible_channel]:
-									channel_conn.append(nick[1])
+									if nick[0] in self.channel_list[possible_channel]:
+										channel_conn.append(nick[1])
+									else:
+										invalid="You are not a member"
+										con.send(invalid.encode('utf-8'))
+										break
 								val += 1
 							else:
 								if val == 1:
@@ -107,7 +114,7 @@ class Server:
 									con.send(err.encode('utf-8'))
 								break
 						
-						emit_message = self.names(con)
+						emit_message = message[1]+self.names(con)+":"
 							
 						for msgs in message[val:]:
 							emit_message+=" "+msgs
@@ -129,6 +136,39 @@ class Server:
 					con.close()
 					break
 
+				#Leave the channel
+				elif message[0]=='/leave':
+					if len(message)>1:
+						val=0
+						conns=[]
+
+						if message[1] in self.channel_list:
+							chnls=self.channel_list.get(message[1])
+							for k in chnls:
+								if self.names(con)==k[0]:
+									break
+								else:
+									val+=1
+	
+							del self.channel_list.get(message[1])[val]
+							if not bool(self.channel_list.get(message[1])):
+								del self.channel_list[message[1]]			
+							else:
+								for nick in self.channel_list[message[1]]:
+									conns.append(nick[1])
+
+								msgs=self.names(con)+" has left the "+message[1]
+								for chnlmessage in conns:
+									chnlmessage.send(msgs.encode('utf-8'))	
+						else:
+							err="No such channel"
+							con.send(err.encode('utf-8'))
+
+					else:	
+						err="Insuficient command"
+						con.send(err.encode('utf-8'))
+						
+
 			#emitting the message
 				else:	
 					data="ERROR!!!!"+data+" is an invalid command"
@@ -138,6 +178,7 @@ class Server:
 			#remove the user form users and connections
 			elif not data:
 				#print(self.checkNick(adr[1]))
+				
 				self.connections.remove(con)
 				data = "server : "+self.checkNick(adr[1]) +" disconnected"
 				print(data)
@@ -147,6 +188,7 @@ class Server:
 
 				con.close()
 				break
+				
 
 
 	def checkNick(self,user_id):
