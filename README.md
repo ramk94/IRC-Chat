@@ -8,6 +8,7 @@
 
 # List of Available commands:
   /join channelname(Join a chat room)
+  
   /join channelname channelname(Join multiple chat room)
 
   /prvmsg name message(for sending private message to a user)
