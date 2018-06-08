@@ -51,17 +51,27 @@ class Server:
 				
 				#Send a private message to a user
 				elif message[0] =='/prvmsg':
+					flag=False
+					for users in self.users:
+						if users[1] == message[1]:
+							flag=True
+							break
+					
+					if flag:
+						self.msg=""
+						for msgs in message[2:]:
+							self.msg=self.msg+" "+msgs
+						data=self.names(con)+' has sent you this private message:' + self.msg
+						cons=self.connect(message[1])
+						name=self.names(cons)
+						if(name==message[1]):
+							cons.send(data.encode('utf-8'))
 
-					self.msg=""
-					for msgs in message[2:]:
-						self.msg=self.msg+" "+msgs
-					data=self.names(con)+' has sent you this private message:' + self.msg
-					cons=self.connect(message[1])
-					name=self.names(cons)
-					if(name==message[1]):
-						cons.send(data.encode('utf-8'))
+						self.msg=""
 
-					self.msg=""
+					else:
+						err="No such Nickname"
+						con.send(err.encode('utf-8'))
 
 				#Join a channel
 				elif message[0]=='/join':
@@ -275,6 +285,6 @@ class Server:
 			sThread.start()
 			self.connections.append(c)
 			print(str(a[0])+ ':' + str(a[1]),"connected")
-	
+				
 chatserver=Server()
 chatserver.run()
