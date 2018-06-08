@@ -12,7 +12,6 @@ class Server:
 	server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)	
 	connections=[]
 	channel_list={}
-	default_channel='IRCDEF'
 	msg=''
 	msgserv=[]
 	
@@ -31,12 +30,24 @@ class Server:
 				message = data.split()	
 
 				#Set a nick name for the user
-				if message[0] == '#NICK':
-					self.users.append((adr[1], message[1]))	
-					self.msgserv.append((message[1],con))
-					data = "#"+self.default_channel+" server: " + self.checkNick(adr[1]) + " Welcome to the Default Channel\n"
-					for connection in self.connections:
-						connection.send(data.encode('utf-8'))
+				if message[0] == '/nick':
+					ifnick_exist=False
+					for nick in self.users:
+						if nick[1]==message[1]:
+							ifnick_exist=True
+							break
+					#print(self.users)
+					if ifnick_exist==False:	
+						self.users.append((adr[1], message[1]))	
+						self.msgserv.append((message[1],con))
+						data = "server: " + self.checkNick(adr[1]) + " Welcome to IRC chat\n"
+					#for connection in self.connections:
+
+					else:
+						data=message[1] + " is being used. Enter a different nickname"
+
+					con.send(data.encode('utf-8'))
+						 
 				
 				#Send a private message to a user
 				elif message[0] =='/prvmsg':
@@ -106,11 +117,18 @@ class Server:
 						channel_conn = []
 						for possible_channel in message[1:]:
 							if possible_channel in self.channel_list:
+								#check if the user us a member of the channel
+								is_member = False
+								for members in self.channel_list[possible_channel]:
+									if self.names(con) == members[0]:
+										is_member = True
+								
+								#add a connection to a list to emmit message at the end
 								for nick in self.channel_list[possible_channel]:
-									if nick[0] in self.channel_list[possible_channel]:
-										channel_conn.append(nick[1])
+									if is_member:
+										channel_conn.append((possible_channel,nick[1]))
 									else:
-										invalid="You are not a member"
+										invalid="You are not a member of "+possible_channel
 										con.send(invalid.encode('utf-8'))
 										break
 								val += 1
@@ -120,13 +138,18 @@ class Server:
 									con.send(err.encode('utf-8'))
 								break
 						
-						emit_message = message[1]+self.names(con)+":"
-							
+							#emmit the message
+						#emit_message = possible_channel+" "+self.names(con)+":"
+						emit_message = ""		
 						for msgs in message[val:]:
-							emit_message+=" "+msgs
+							emit_message +=" "+msgs
 
 						for channel_user in channel_conn:
-							channel_user.send(emit_message.encode('utf-8'))
+							emit_user = channel_user[0] + " " +self.names(con)+":"+emit_message+"\n"
+							#print(channel_user, emit_user)
+				
+							channel_user[1].send(emit_user.encode('utf-8'))
+
 
 									
 					else:
@@ -190,8 +213,6 @@ class Server:
 							for k in self.channel_list.get(message[1]):
 								available_users+=k[0]+"\n"
 							
-							print(available_users)
-
 							if self.names(con) in available_users:
 								available_users="Member of the room are: \n"+available_users
 								con.send(available_users.encode('utf-8'))

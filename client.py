@@ -27,8 +27,7 @@ class Client:
 			print("["+time.strftime("%H:%M:%S")+"]"," ",data)
 
 	def sendMsg(self):
-		alias=input("Nickname: ")
-		message='#NICK '+alias	
+		message=input("Please enter /nick yournickname\n")
 		while True:
 			self.soc.send(message.encode('utf-8'))
 			message=input('')
